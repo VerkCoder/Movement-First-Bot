@@ -10,7 +10,7 @@ from aiogram.types import Message, CallbackQuery, BufferedInputFile, InlineKeybo
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-from config import PATH_TO_USERS_FILE, PATH_TO_PROJECTS_FILE, MODERATORS_CHAT_ID, NON_DISPLAY_CHARACTER
+from config import PATH_TO_USERS_FILE, PATH_TO_PROJECTS_FILE, MEDIA_FOLDER_NAME, MODERATORS_CHAT_ID, NON_DISPLAY_CHARACTER
 from states import ActiveState
 from utils import read_json_file, write_json_file, check_authorization, is_moderator, date_validation, send_not_authorized, send_not_moderator
 from services import get_user_data, get_project_data, get_all_projects, update_user_data, delete_project, give_reward_to_project_members, add_points_to_member, ban_user, unban_user, is_user_banned
@@ -701,7 +701,7 @@ async def handle_photos(message: Message, state: FSMContext, bot: Bot):
     category = state_data.get('category', "")
     project_id = state_data.get('project_id',"")
     filename = f"project:::{category}:::{project_id}{file_extension}"
-    save_path = os.path.join("media", filename)
+    save_path = os.path.join(MEDIA_FOLDER_NAME, filename)
 
     data = read_json_file(PATH_TO_PROJECTS_FILE)
     project_data = data[category].get(project_id, {})

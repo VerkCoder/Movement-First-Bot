@@ -11,12 +11,17 @@ from handlers.user_handlers import router as user_router
 from handlers.project_handlers import router as project_router
 from handlers.report_handlers import router as report_router
 from handlers.moderation_handlers import router as moderation_router
+from initialization import run_initialization 
 from scheduler import timer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 async def main():
+    if not run_initialization():
+        logger.error("Ошибка инициализации бота. Запуск прерван.")
+        return 1
+        
     bot = Bot(token=API_TELEGRAM)
     dp = Dispatcher(storage=MemoryStorage())
     
