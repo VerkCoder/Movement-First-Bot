@@ -1,7 +1,7 @@
 # [**MovementFirstBot**](https://t.me/MovementFirstG5_bot)
 
 <div align="center">
-  <a href="https://github.com/VerkCoder/Movement-First-Bot">
+  <a href="https://github.com/GavCommit/Movement-First-Bot">
     <img src="/templates/logo.png" alt="Logo" width="200" height="500">
   </a>
 
