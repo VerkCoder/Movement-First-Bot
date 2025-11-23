@@ -28,6 +28,12 @@ async def project_categories_menu(callback: CallbackQuery, state: FSMContext):
     if not await check_authorization(callback.from_user.id):
         return
     
+    from utils import check_user_consent
+    if not await check_user_consent(user_id):
+        from utils import show_consent_agreement
+        await show_consent_agreement(message=message, state=state)
+        return
+    
     await callback.message.edit_text(
         "👤 <b>Выберите категорию:</b>",
         reply_markup=await get_projects_menu_kb(),
