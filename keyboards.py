@@ -103,7 +103,6 @@ async def get_back_to_project_editing_kb():
         ]
     )
 
-# ✅ НОВЫЕ КЛАВИАТУРЫ ДЛЯ СИСТЕМЫ ОДОБРЕНИЯ ЗАЯВОК
 async def get_approval_request_kb(user_id: str, category: str, project_id: str):
     """Клавиатура для запроса одобрения участия в проекте"""
     return InlineKeyboardMarkup(
@@ -116,6 +115,22 @@ async def get_approval_request_kb(user_id: str, category: str, project_id: str):
                 InlineKeyboardButton(
                     text='❌ Отклонить', 
                     callback_data=f"DECLINE_USER_PROJECT:::{user_id}:::{category}:::{project_id}"
+                )
+            ]
+        ]
+    )
+
+async def get_consent_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text='✅ Принять условия', 
+                    callback_data=f"CONSENT:::ACCEPTED"
+                ),
+                InlineKeyboardButton(
+                    text='❌ Отклонить', 
+                    callback_data=f"CONSENT:::REJECTED"
                 )
             ]
         ]

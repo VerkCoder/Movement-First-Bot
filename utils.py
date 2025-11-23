@@ -41,13 +41,11 @@ def read_json_file(file_path: str) -> Dict[str, Any]:
 def write_json_file(file_path: str, data: Dict[str, Any]) -> bool:
     """Запись в JSON файл с обновлением кэша"""
     try:
-        # Создаем директорию если не существует
         os.makedirs(os.path.dirname(file_path) if os.path.dirname(file_path) else '.', exist_ok=True)
         
         with open(file_path, 'w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
         
-        # Обновляем кэш
         _file_cache[file_path] = data
         _cache_timestamps[file_path] = time.time()
         return True
@@ -63,30 +61,35 @@ def invalidate_cache(file_path: str = None):
         _file_cache.clear()
         _cache_timestamps.clear()
 
-# Функции проверки доступа
 async def check_authorization(user_id: str) -> bool:
     """Проверка авторизации пользователя"""
     data = read_json_file(PATH_TO_USERS_FILE)
     user_data = data.get(str(user_id), {})
     
-    # ✅ Проверяем не забанен ли пользователь
     if user_data.get("ban", 0) == 1:
         return False
     
     return str(user_id) in data
+
+async def check_user_consent(user_id: str) -> bool:
+    """Проверка соглашения пользователя на обработку данных"""
+    data = read_json_file(PATH_TO_USERS_FILE)
+    user_data = data.get(str(user_id), {})
+    
+    if user_data.get("consent_accepted", False) != False:
+        return True
+    return False
 
 async def is_moderator(user_id: str) -> bool:
     """Проверка является ли пользователь модератором"""
     data = read_json_file(PATH_TO_USERS_FILE)
     user_data = data.get(str(user_id), {})
     
-    # ✅ Забаненные пользователи не могут быть модераторами
     if user_data.get("ban", 0) == 1:
         return False
     
     return bool(user_data.get("moderator", False))
 
-# Функции для отправки сообщений об ошибках
 async def send_not_authorized(message, state=None):
     """Отправка сообщения о неавторизации"""
     from config import NOT_AUTHORIZED_MESSAGE
@@ -96,7 +99,6 @@ async def send_not_authorized(message, state=None):
     data = read_json_file(PATH_TO_USERS_FILE)
     user_data = data.get(user_id, {})
     
-    # ✅ Проверяем бан
     if user_data.get("ban", 0) == 1:
         await message.answer("❌ Вы были заблокированы администрацией бота ❌")
         return
@@ -115,7 +117,17 @@ async def send_not_moderator(message, reply_markup=None):
     
     await message.answer(NOT_MODERATOR_MESSAGE, reply_markup=reply_markup)
 
-# Валидация данных
+async def show_consent_agreement(message, state):
+    """Показываем соглашение о конфиденциальности"""
+    from config import CONSENT_TEXT as consent_text
+    from keyboards import get_consent_keyboard
+
+    await message.answer(
+        consent_text,
+        reply_markup=get_consent_keyboard(),
+        parse_mode="HTML"
+    )
+
 async def phone_number_validating(number: str) -> Optional[str]:
     """Валидация номера телефона"""
     n = ''.join(filter(lambda x: x.isdigit(), number))
@@ -141,7 +153,6 @@ async def date_validation(date: str) -> bool:
     except ValueError:
         return False
 
-# Форматирование
 async def format_points(points: int) -> str:
     """Форматирование баллов с правильными окончаниями"""
     points_str = str(points)
@@ -161,8 +172,6 @@ async def format_member_count(count: int) -> str:
         return f"{count} участника"
     else:
         return f"{count} участник"
-
-# Таблица лидеров
 
 async def get_leaderboard(user_id:str, top_n=None):
     data = read_json_file(PATH_TO_USERS_FILE)

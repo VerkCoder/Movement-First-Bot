@@ -4,7 +4,6 @@ from typing import Any, Optional
 from config import PATH_TO_USERS_FILE, PATH_TO_PROJECTS_FILE, NON_DISPLAY_CHARACTER
 from utils import read_json_file, write_json_file, invalidate_cache
 
-# Сервисы для работы с пользователями
 async def get_user_data(user_id: str):
     """Получить данные пользователя"""
     return read_json_file(PATH_TO_USERS_FILE).get(str(user_id))
@@ -30,7 +29,6 @@ async def remove_user(user_id: str) -> bool:
     if user_id not in users_data:
         return False
     
-    # Удаляем пользователя из всех проектов
     user_active_projects = users_data[user_id].get("active_projects", [])
     for project_value in user_active_projects:
         try:
@@ -40,10 +38,8 @@ async def remove_user(user_id: str) -> bool:
         except:
             continue
     
-    # Удаляем пользователя
     del users_data[user_id]
     
-    # Сохраняем изменения
     success1 = write_json_file(PATH_TO_USERS_FILE, users_data)
     success2 = write_json_file(PATH_TO_PROJECTS_FILE, projects_data)
     
@@ -53,7 +49,6 @@ async def remove_user(user_id: str) -> bool:
     
     return success1 and success2
 
-# Сервисы для работы с проектами
 async def get_project_data(category: str, project_id: str):
     """Получить данные проекта"""
     return read_json_file(PATH_TO_PROJECTS_FILE).get(category, {}).get(project_id)
@@ -79,7 +74,6 @@ async def create_project(category: str, project_name: str) -> Optional[str]:
     if category not in data:
         data[category] = {}
     
-    # ✅ Добавил поле approval_required (по умолчанию 0 - не требуется одобрение)
     data[category][project_id] = {
         "name": NON_DISPLAY_CHARACTER + project_name,
         "description": "Без описания",
@@ -87,7 +81,7 @@ async def create_project(category: str, project_name: str) -> Optional[str]:
         "date": "00.01.2000",
         "prize": 0,
         "unleaveable": 0,
-        "approval_required": 0,  # ✅ Новый флаг
+        "approval_required": 0,  
         "preview_photo": None,
         "max_members": 100,
         "members": {}
@@ -121,7 +115,6 @@ async def delete_project(category: str, project_id: str) -> bool:
     if category not in data_pr or project_id not in data_pr[category]:
         return False
     
-    # Удаляем проект из активных проектов пользователей
     project_members = data_pr[category][project_id].get("members", {})
     for user_id in project_members:
         if user_id in data_us:
@@ -129,7 +122,6 @@ async def delete_project(category: str, project_id: str) -> bool:
             if project_value in data_us[user_id].get("active_projects", []):
                 data_us[user_id]["active_projects"].remove(project_value)
     
-    # Удаляем фото проекта если есть
     photo_path = data_pr[category][project_id].get("preview_photo")
     if photo_path and os.path.exists(photo_path):
         try:
@@ -137,10 +129,8 @@ async def delete_project(category: str, project_id: str) -> bool:
         except:
             pass
     
-    # Удаляем проект
     del data_pr[category][project_id]
     
-    # Сохраняем изменения
     success1 = write_json_file(PATH_TO_PROJECTS_FILE, data_pr)
     success2 = write_json_file(PATH_TO_USERS_FILE, data_us)
     
@@ -150,7 +140,6 @@ async def delete_project(category: str, project_id: str) -> bool:
     
     return success1 and success2
 
-# Сервисы для работы с участниками проектов
 async def add_member_to_project(user_id: str, category: str, project_id: str):
     """Добавить участника в проект"""
     users_data = read_json_file(PATH_TO_USERS_FILE)
@@ -171,15 +160,12 @@ async def add_member_to_project(user_id: str, category: str, project_id: str):
     if user_id in project.get("members", {}):
         return {"status": False, "error": "User already member"}
     
-    # Добавляем в проект
     projects_data[category][project_id]["members"][user_id] = {"role": "участник"}
     
-    # Добавляем в активные проекты пользователя
     project_value = f"{category}:::{project_id}"
     if project_value not in users_data[user_id].get("active_projects", []):
         users_data[user_id]["active_projects"].append(project_value)
     
-    # Сохраняем изменения
     success1 = write_json_file(PATH_TO_PROJECTS_FILE, projects_data)
     success2 = write_json_file(PATH_TO_USERS_FILE, users_data)
     
@@ -203,15 +189,12 @@ async def remove_member_from_project(user_id: str, category: str, project_id: st
     if user_id not in project.get("members", {}):
         return {"status": False, "error": "User not member of project"}
     
-    # Удаляем из проекта
     del projects_data[category][project_id]["members"][user_id]
     
-    # Удаляем из активных проектов пользователя
     project_value = f"{category}:::{project_id}"
     if project_value in users_data[user_id].get("active_projects", []):
         users_data[user_id]["active_projects"].remove(project_value)
     
-    # Сохраняем изменения
     success1 = write_json_file(PATH_TO_PROJECTS_FILE, projects_data)
     success2 = write_json_file(PATH_TO_USERS_FILE, users_data)
     
@@ -221,7 +204,6 @@ async def remove_member_from_project(user_id: str, category: str, project_id: st
         return {"status": True, "error": "success"}
     return {"status": False, "error": "Failed to save"}
 
-# Сервисы для работы с баллами
 async def add_points_to_member(user_id: str, points: int):
     """Добавить баллы пользователю"""
     users_data = read_json_file(PATH_TO_USERS_FILE)
@@ -262,7 +244,6 @@ async def give_reward_to_project_members(category: str, project_id: str):
     
     return {"status": True, "members": rewarded, "error": None}
 
-# Проверка регистрации для проектов
 async def check_project_registration(user_id: str):
     """Проверить готовность пользователя к участию в проектах"""
     user_data = await get_user_data(user_id)
@@ -276,7 +257,6 @@ async def check_project_registration(user_id: str):
     
     return {"status": True, "error": "access"}
 
-# Сервисы для рейтинга
 async def get_leaderboard_data(user_id: str = None, top_n: int = None):
     """Получить данные рейтинга"""
     users_data = read_json_file(PATH_TO_USERS_FILE)
@@ -307,7 +287,6 @@ async def get_leaderboard_data(user_id: str = None, top_n: int = None):
     
     return leaderboard, user_rank
 
-# ✅ НовЫЕ ФУНКЦИИ ДЛЯ РАБОТЫ С БАНОМ
 async def ban_user(user_id: str) -> bool:
     """Забанить пользователя"""
     users_data = read_json_file(PATH_TO_USERS_FILE)
@@ -317,7 +296,6 @@ async def ban_user(user_id: str) -> bool:
     if user_id not in users_data:
         return False
     
-    # Удаляем пользователя из всех проектов
     user_active_projects = users_data[user_id].get("active_projects", [])
     for project_value in user_active_projects:
         try:
@@ -327,10 +305,8 @@ async def ban_user(user_id: str) -> bool:
         except:
             continue
     
-    # Устанавливаем флаг бана
     users_data[user_id]["ban"] = 1
     
-    # Сохраняем изменения
     success1 = write_json_file(PATH_TO_USERS_FILE, users_data)
     success2 = write_json_file(PATH_TO_PROJECTS_FILE, projects_data)
     
@@ -348,7 +324,6 @@ async def unban_user(user_id: str) -> bool:
     if user_id not in users_data:
         return False
     
-    # Убираем флаг бана
     users_data[user_id]["ban"] = 0
     
     success = write_json_file(PATH_TO_USERS_FILE, users_data)
@@ -364,3 +339,30 @@ async def is_user_banned(user_id: str) -> bool:
         return False
     
     return bool(user_data.get("ban", 0))
+
+async def save_user_consent(user_id: str) -> bool:
+    """Сохраняем факт согласия пользователя"""
+    try:
+        data = read_json_file(PATH_TO_USERS_FILE)
+        
+        if user_id in data:
+            data[user_id]["consent_accepted"] = datetime.now().isoformat()
+            
+            write_json_file(PATH_TO_USERS_FILE, data)
+            return True
+        return False
+    except Exception as e:
+        return False
+
+async def check_new_user(user_id: str) -> bool:
+    """Определяем нового пользователя"""
+    try:
+        data = read_json_file(PATH_TO_USERS_FILE)
+        
+        if user_id in data:
+            if data[user_id]["name"] == "Не указано":
+                return True
+        return False
+    except Exception as e:
+        return False
+
