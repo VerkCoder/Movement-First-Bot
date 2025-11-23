@@ -5,7 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-from config import API_TELEGRAM, SCHOOL_AUTH_PSWD, PATH_TO_USERS_FILE
+from config import API_TELEGRAM, SCHOOL_AUTH_PSWD, PATH_TO_USERS_FILE, NON_DISPLAY_CHARACTER
 from states import ActiveState
 from utils import read_json_file, write_json_file
 from keyboards import get_main_menu_kb
@@ -107,7 +107,7 @@ async def new_user_registration(message: Message, state: FSMContext):
             await state.set_state(ActiveState.new_user_registration)
             return  
         else:
-            success = await update_user_data(user_id, "phone", valid_number)
+            success = await update_user_data(user_id, "phone", NON_DISPLAY_CHARACTER+valid_number)
             if success:
                 await message.answer(
                     "✅ Телефон сохранен успешно ✅\nВведите Ваше ID <a href='https://id.pervye.ru/account/board'>cайта движения </a>:",
