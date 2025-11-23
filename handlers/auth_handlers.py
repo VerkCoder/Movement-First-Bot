@@ -39,7 +39,6 @@ async def start(message: Message, state: FSMContext):
 
 @router.message(ActiveState.auth_wait_pswd)
 async def authorization(message: Message, state: FSMContext):
-    # ✅ Проверяем не забанен ли пользователь
     user_id = str(message.from_user.id)
     from services import is_user_banned
     if await is_user_banned(user_id):
@@ -68,7 +67,7 @@ async def authorization(message: Message, state: FSMContext):
             )
 
         from utils import show_consent_agreement
-        await show_consent_agreement()            
+        await show_consent_agreement(message=message, state=state)           
         return
     else:
         await message.answer("Неверный пароль школы. Попробуйте снова.")
@@ -124,7 +123,7 @@ async def main_menu(message: Message, state: FSMContext):
 @router.callback_query(F.data.startswith("CONSENT"))
 async def consent_button_handler(callback: CallbackQuery, state: FSMContext):
     """Обработчик кнопок согласия пользователей"""
-    action = F.data.split(":::")[1]
+    action = callback.data.split(":::")[1]
     user_id = str(callback.from_user.id)
 
     if action == "ACCEPTED":
